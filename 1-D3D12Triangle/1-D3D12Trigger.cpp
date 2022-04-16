@@ -74,10 +74,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR    l
 	UINT64								n64FenceValue = 0ui64;
 	HANDLE								hEventFence = nullptr;
 
-	D3D12_VIEWPORT						stViewPort = { 0.0f, 0.0f
-		, static_cast<float>(iWidth), static_cast<float>(iHeight), D3D12_MIN_DEPTH, D3D12_MAX_DEPTH };
-	D3D12_RECT							stScissorRect = { 0, 0
-		, static_cast<LONG>(iWidth), static_cast<LONG>(iHeight) };
+	D3D12_VIEWPORT						stViewPort = { 0.0f, 0.0f, static_cast<float>(iWidth), static_cast<float>(iHeight), D3D12_MIN_DEPTH, D3D12_MAX_DEPTH };
+	D3D12_RECT							stScissorRect = { 0, 0, static_cast<LONG>(iWidth), static_cast<LONG>(iHeight) };
 	
 	D3D_FEATURE_LEVEL					emFeatureLevel = D3D_FEATURE_LEVEL_12_1;
 
@@ -168,7 +166,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR    l
 			UpdateWindow(hWnd);
 		}
 
-		//打开显示子系统的调试支持
+		// 打开显示子系统的调试支持
 		{
 #if defined(_DEBUG)
 			ComPtr<ID3D12Debug> debugController;
@@ -192,7 +190,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR    l
 		// 枚举适配器，并选择合适的适配器来创建3D设备对象
 		{
 			DXGI_ADAPTER_DESC1 stAdapterDesc = {};
-			for (UINT adapterIndex = 1; DXGI_ERROR_NOT_FOUND != pIDXGIFactory5->EnumAdapters1(adapterIndex, &pIAdapter1); ++adapterIndex)
+			for (UINT adapterIndex = 0; DXGI_ERROR_NOT_FOUND != pIDXGIFactory5->EnumAdapters1(adapterIndex, &pIAdapter1); ++adapterIndex)
 			{
 				pIAdapter1->GetDesc1(&stAdapterDesc);
 
@@ -287,7 +285,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR    l
 
 		}
 
-		//创建一个空的根描述符，也就是默认的根描述符
+		// 创建一个空的根描述符，也就是默认的根描述符
 		{
 			D3D12_ROOT_SIGNATURE_DESC stRootSignatureDesc = 
 			{ 
@@ -313,7 +311,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR    l
 				, IID_PPV_ARGS(&pIRootSignature)));
 		}
 
-		//创建命令列表分配器
+		// 创建命令列表分配器
 		{
 			GRS_THROW_IF_FAILED(pID3D12Device4->CreateCommandAllocator(
 				D3D12_COMMAND_LIST_TYPE_DIRECT
@@ -496,13 +494,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR    l
 		stBeginResBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		stBeginResBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
-		D3D12_RESOURCE_BARRIER stEneResBarrier = {};
-		stEneResBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		stEneResBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		stEneResBarrier.Transition.pResource = pIARenderTargets[nFrameIndex].Get();
-		stEneResBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		stEneResBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-		stEneResBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		D3D12_RESOURCE_BARRIER stEndResBarrier = {};
+		stEndResBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		stEndResBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		stEndResBarrier.Transition.pResource = pIARenderTargets[nFrameIndex].Get();
+		stEndResBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		stEndResBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		stEndResBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 		D3D12_CPU_DESCRIPTOR_HANDLE stRTVHandle = pIRTVHeap->GetCPUDescriptorHandleForHeapStart();
 		DWORD dwRet = 0;
@@ -552,8 +550,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR    l
 				pICMDList->DrawInstanced(3, 1, 0, 0);
 
 				//又一个资源屏障，用于确定渲染已经结束可以提交画面去显示了
-				stEneResBarrier.Transition.pResource = pIARenderTargets[nFrameIndex].Get();
-				pICMDList->ResourceBarrier(1, &stEneResBarrier);
+				stEndResBarrier.Transition.pResource = pIARenderTargets[nFrameIndex].Get();
+				pICMDList->ResourceBarrier(1, &stEndResBarrier);
 				//关闭命令列表，可以去执行了
 				GRS_THROW_IF_FAILED(pICMDList->Close());
 
